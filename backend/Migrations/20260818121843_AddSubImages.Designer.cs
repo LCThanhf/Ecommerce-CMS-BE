@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShoppingCms.Api.Data;
 
@@ -11,9 +12,11 @@ using ShoppingCms.Api.Data;
 namespace ShoppingCms.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260818121843_AddSubImages")]
+    partial class AddSubImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,7 +93,7 @@ namespace ShoppingCms.Api.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@gmail.com",
-                            PasswordHash = "$2a$11$Ow4LXvTgSBV6lvc5mYjbCu6NiQ8SQ8uuQ6UtMSAvoiw5xMRkcfwZC",
+                            PasswordHash = "$2a$11$m85wDTjffu2KhkOuVaDOnOwg3uehHTLg9by36Ppm/DxTjHczTGcju",
                             Role = "Admin",
                             Username = "Admin"
                         });
@@ -111,7 +114,8 @@ namespace ShoppingCms.Api.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -128,13 +132,16 @@ namespace ShoppingCms.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("SubImage1")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("SubImage2")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("SubImage3")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.HasKey("Id");
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCms.Api.Data;
@@ -7,6 +8,7 @@ namespace ShoppingCms.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AccountsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -94,3 +96,4 @@ namespace ShoppingCms.Api.Controllers
         }
     }
 }
+

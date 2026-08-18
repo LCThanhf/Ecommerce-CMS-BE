@@ -9,5 +9,20 @@ namespace ShoppingCms.Api.Data
 
         public DbSet<Account> Accounts { get; set; } = null!;
         public DbSet<Production> Productions { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Account>().HasData(new Account
+            {
+                Id = 1,
+                Username = "Admin",
+                Email = "admin@gmail.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                Role = "Admin",
+                CreatedAt = new System.DateTime(2023, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)
+            });
+        }
     }
 }

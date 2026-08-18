@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCms.Api.Data;
@@ -36,6 +37,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutProduction(int id, Production production)
         {
             if (id != production.Id)
@@ -65,6 +67,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Production>> PostProduction(Production production)
         {
             _context.Productions.Add(production);
@@ -74,6 +77,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProduction(int id)
         {
             var production = await _context.Productions.FindAsync(id);
@@ -94,3 +98,4 @@ namespace ShoppingCms.Api.Controllers
         }
     }
 }
+

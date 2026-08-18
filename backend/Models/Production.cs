@@ -18,8 +18,13 @@ namespace ShoppingCms.Api.Models
         
         public int StockQuantity { get; set; }
         
-        [MaxLength(500)]
         public string? ImageUrl { get; set; }
+
+        public string? SubImage1 { get; set; }
+
+        public string? SubImage2 { get; set; }
+
+        public string? SubImage3 { get; set; }
         
         [Column(TypeName = "decimal(3,1)")]
         public decimal Rating { get; set; } = 0; // e.g., 4.5
@@ -27,3 +32,5 @@ namespace ShoppingCms.Api.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
+
+
