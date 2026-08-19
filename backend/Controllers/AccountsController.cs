@@ -8,7 +8,6 @@ namespace ShoppingCms.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
     public class AccountsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -19,6 +18,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
             return await _context.Accounts.ToListAsync();
@@ -38,6 +38,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> PutAccount(int id, Account account)
         {
             if (id != account.Id)
@@ -67,6 +68,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Account>> PostAccount(Account account)
         {
             _context.Accounts.Add(account);
@@ -76,6 +78,7 @@ namespace ShoppingCms.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAccount(int id)
         {
             var account = await _context.Accounts.FindAsync(id);
@@ -96,4 +99,5 @@ namespace ShoppingCms.Api.Controllers
         }
     }
 }
+
 
