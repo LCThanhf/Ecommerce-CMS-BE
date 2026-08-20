@@ -59,7 +59,7 @@ namespace ShoppingCms.Api.Controllers
             return Ok(new
             {
                 Token = token,
-                User = new { account.Id, account.Username, account.Email, account.Role }
+                User = new { account.Id, account.Username, account.Email, account.Role, account.Avatar }
             });
         }
 
@@ -91,3 +91,4 @@ namespace ShoppingCms.Api.Controllers
         }
     }
 }
+
