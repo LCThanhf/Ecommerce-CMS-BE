@@ -39,7 +39,6 @@ namespace ShoppingCms.Api.Models
         [MaxLength(20)]
         public string? Phone { get; set; }
 
-        [MaxLength(500)]
         public string? Avatar { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
