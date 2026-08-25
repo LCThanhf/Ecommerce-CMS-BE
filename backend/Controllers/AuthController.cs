@@ -1,11 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using ShoppingCms.Api.Data;
-using ShoppingCms.Api.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using ShoppingCms.Api.DTOs;
+using ShoppingCms.Api.Services.Interfaces;
 
 namespace ShoppingCms.Api.Controllers
 {
@@ -13,82 +8,37 @@ namespace ShoppingCms.Api.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
 
-        public AuthController(AppDbContext context, IConfiguration configuration)
+        public AuthController(IAuthService authService)
         {
-            _context = context;
-            _configuration = configuration;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            if (await _context.Accounts.AnyAsync(a => a.Email == request.Email))
+            var result = await _authService.RegisterAsync(request);
+
+            if (!result.Success)
             {
-                return BadRequest("Email already exists.");
+                return BadRequest(result.Message);
             }
 
-            var account = new Account
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                Role = "User" // Default role
-            };
-
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Registration successful" });
+            return Ok(new { message = result.Message });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email);
+            var result = await _authService.LoginAsync(request);
 
-            if (account == null || !BCrypt.Net.BCrypt.Verify(request.Password, account.PasswordHash))
+            if (!result.Success)
             {
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(result.Message);
             }
 
-            var token = GenerateJwtToken(account);
-
-            return Ok(new
-            {
-                Token = token,
-                User = new { account.Id, account.Username, account.Email, account.Role, account.Avatar }
-            });
-        }
-
-        private string GenerateJwtToken(Account account)
-        {
-            var jwtSettings = _configuration.GetSection("Jwt");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
-
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, account.Email),
-                new Claim(ClaimTypes.Role, account.Role)
-            };
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(2),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = jwtSettings["Issuer"],
-                Audience = jwtSettings["Audience"]
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
+            return Ok(result.Data);
         }
     }
 }
-

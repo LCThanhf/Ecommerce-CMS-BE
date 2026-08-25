@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShoppingCms.Api.Data;
-using ShoppingCms.Api.Models;
+using ShoppingCms.Api.DTOs;
+using ShoppingCms.Api.Services.Interfaces;
 
 namespace ShoppingCms.Api.Controllers
 {
@@ -10,58 +9,48 @@ namespace ShoppingCms.Api.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAccountService _accountService;
 
-        public AccountsController(AppDbContext context)
+        public AccountsController(IAccountService accountService)
         {
-            _context = context;
+            _accountService = accountService;
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
+        public async Task<ActionResult<IEnumerable<AccountResponse>>> GetAccounts()
         {
-            return await _context.Accounts.ToListAsync();
+            var accounts = await _accountService.GetAccountsAsync();
+            return Ok(accounts);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Account>> GetAccount(int id)
+        public async Task<ActionResult<AccountResponse>> GetAccount(int id)
         {
-            var account = await _context.Accounts.FindAsync(id);
+            var account = await _accountService.GetAccountAsync(id);
 
             if (account == null)
             {
                 return NotFound();
             }
 
-            return account;
+            return Ok(account);
         }
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutAccount(int id, Account account)
+        public async Task<IActionResult> PutAccount(int id, UpdateAccountRequest request)
         {
-            if (id != account.Id)
+            if (id != request.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(account).State = EntityState.Modified;
-
-            try
+            var result = await _accountService.UpdateAccountAsync(id, request);
+            if (!result.Success)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AccountExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (result.Message == "Account not found") return NotFound();
+                return BadRequest(result.Message);
             }
 
             return NoContent();
@@ -69,35 +58,28 @@ namespace ShoppingCms.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Account>> PostAccount(Account account)
+        public async Task<ActionResult<AccountResponse>> PostAccount(CreateAccountRequest request)
         {
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
+            var result = await _accountService.CreateAccountAsync(request);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
-            return CreatedAtAction("GetAccount", new { id = account.Id }, account);
+            return CreatedAtAction("GetAccount", new { id = result.Data!.Id }, result.Data);
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAccount(int id)
         {
-            var account = await _context.Accounts.FindAsync(id);
-            if (account == null)
+            var result = await _accountService.DeleteAccountAsync(id);
+            if (!result.Success)
             {
                 return NotFound();
             }
 
-            _context.Accounts.Remove(account);
-            await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool AccountExists(int id)
-        {
-            return _context.Accounts.Any(e => e.Id == id);
         }
     }
 }
-
-

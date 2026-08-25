@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShoppingCms.Api.Data;
-using ShoppingCms.Api.Models;
+using ShoppingCms.Api.DTOs;
+using ShoppingCms.Api.Services.Interfaces;
 
 namespace ShoppingCms.Api.Controllers
 {
@@ -10,57 +9,47 @@ namespace ShoppingCms.Api.Controllers
     [ApiController]
     public class ProductionsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IProductionService _productionService;
 
-        public ProductionsController(AppDbContext context)
+        public ProductionsController(IProductionService productionService)
         {
-            _context = context;
+            _productionService = productionService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Production>>> GetProductions()
+        public async Task<ActionResult<IEnumerable<ProductionResponse>>> GetProductions()
         {
-            return await _context.Productions.ToListAsync();
+            var productions = await _productionService.GetProductionsAsync();
+            return Ok(productions);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Production>> GetProduction(int id)
+        public async Task<ActionResult<ProductionResponse>> GetProduction(int id)
         {
-            var production = await _context.Productions.FindAsync(id);
+            var production = await _productionService.GetProductionAsync(id);
 
             if (production == null)
             {
                 return NotFound();
             }
 
-            return production;
+            return Ok(production);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> PutProduction(int id, Production production)
+        public async Task<IActionResult> PutProduction(int id, UpdateProductionRequest request)
         {
-            if (id != production.Id)
+            if (id != request.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(production).State = EntityState.Modified;
-
-            try
+            var result = await _productionService.UpdateProductionAsync(id, request);
+            if (!result.Success)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (result.Message == "Production not found") return NotFound();
+                return BadRequest(result.Message);
             }
 
             return NoContent();
@@ -68,34 +57,28 @@ namespace ShoppingCms.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Production>> PostProduction(Production production)
+        public async Task<ActionResult<ProductionResponse>> PostProduction(CreateProductionRequest request)
         {
-            _context.Productions.Add(production);
-            await _context.SaveChangesAsync();
+            var result = await _productionService.CreateProductionAsync(request);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
 
-            return CreatedAtAction("GetProduction", new { id = production.Id }, production);
+            return CreatedAtAction("GetProduction", new { id = result.Data!.Id }, result.Data);
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProduction(int id)
         {
-            var production = await _context.Productions.FindAsync(id);
-            if (production == null)
+            var result = await _productionService.DeleteProductionAsync(id);
+            if (!result.Success)
             {
                 return NotFound();
             }
 
-            _context.Productions.Remove(production);
-            await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool ProductionExists(int id)
-        {
-            return _context.Productions.Any(e => e.Id == id);
         }
     }
 }
-
