@@ -9,10 +9,14 @@ namespace ShoppingCms.Api.Data
 
         public DbSet<Account> Accounts { get; set; } = null!;
         public DbSet<Production> Productions { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<OrderItem> OrderItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Order>().HasIndex(o => o.OrderCode).IsUnique();
 
             modelBuilder.Entity<Account>().HasData(new Account
             {

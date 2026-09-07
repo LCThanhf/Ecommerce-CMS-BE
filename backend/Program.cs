@@ -16,6 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // Configure EF Core with Pomelo MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
