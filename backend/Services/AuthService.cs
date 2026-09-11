@@ -37,6 +37,17 @@ namespace ShoppingCms.Api.Services
             };
 
             _context.Accounts.Add(account);
+
+            var newCustomerNotification = new Notification
+            {
+                Type = "new_customer",
+                Title = "Khách hàng mới",
+                Message = $"Khách hàng '{account.Username}' vừa đăng ký tài khoản.",
+                ReferenceId = account.Email,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(newCustomerNotification);
+
             await _context.SaveChangesAsync();
 
             return (true, "Registration successful");

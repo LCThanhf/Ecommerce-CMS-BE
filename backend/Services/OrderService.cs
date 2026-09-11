@@ -57,6 +57,26 @@ namespace ShoppingCms.Api.Services
                     Quantity = itemDto.Quantity,
                     Subtotal = itemSubtotal
                 });
+
+                if (product != null)
+                {
+                    product.StockQuantity -= itemDto.Quantity;
+                    if (product.StockQuantity < 0) product.StockQuantity = 0;
+
+                    if (product.StockQuantity <= 5)
+                    {
+                        var alertType = product.StockQuantity == 0 ? "Hết hàng" : "Sắp hết hàng";
+                        var notification = new Notification
+                        {
+                            Type = "inventory_alert",
+                            Title = "Cảnh báo tồn kho",
+                            Message = $"Sản phẩm '{product.Name}' {alertType} (còn {product.StockQuantity} cái).",
+                            ReferenceId = product.Id.ToString(),
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Notifications.Add(notification);
+                    }
+                }
             }
 
             order.SubTotal = subTotal;
@@ -64,6 +84,17 @@ namespace ShoppingCms.Api.Services
             order.TotalAmount = order.SubTotal + order.TaxAmount;
 
             _context.Orders.Add(order);
+
+            var newOrderNotification = new Notification
+            {
+                Type = "new_order",
+                Title = "Đơn hàng mới",
+                Message = $"Đơn hàng {order.OrderCode} vừa được tạo với tổng cộng {order.TotalAmount:N0}đ.",
+                ReferenceId = order.OrderCode,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(newOrderNotification);
+
             await _context.SaveChangesAsync();
 
             return (true, "Đặt hàng thành công", order);
@@ -102,6 +133,19 @@ namespace ShoppingCms.Api.Services
             if (order == null)
             {
                 return (false, "Không tìm thấy đơn hàng.", null);
+            }
+
+            if (status == "Cancelled" && order.Status != "Cancelled")
+            {
+                foreach (var item in order.Items)
+                {
+                    var product = await _context.Productions.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                        _context.Productions.Update(product);
+                    }
+                }
             }
 
             order.Status = status;
